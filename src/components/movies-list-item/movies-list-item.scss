@@ -1,0 +1,125 @@
+.item {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  max-width: 451px;
+  max-height: 280px;
+  width: 100%;
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 22px;
+  color: #000000;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+
+  @media (max-width: 458px) {
+    padding: 5px 10px;
+    max-width: 390px;
+    max-height: 250px;
+  }
+
+  &__grade {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+    line-height: 22px;
+    border-radius: 50%;
+    border: 2px solid #e9d100;
+    cursor: default;
+
+    @media (max-width: 458px) {
+      top: 5px;
+      right: 5px;
+      max-width: 390px;
+      max-height: 250px;
+    }
+  }
+
+  &__img {
+    object-fit: cover;
+
+    @media (max-width: 458px) {
+      width: 60px;
+      height: 91px;
+    }
+  }
+
+  &__about {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 20px 15px;
+
+    @media (max-width: 458px) {
+      padding: 0 10px 10px;
+    }
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 28px;
+    max-width: 200px;
+  }
+
+  &__release-time {
+    color: #827e7e;
+  }
+
+  &__labels {
+    display: flex;
+    gap: 8px;
+
+    @media (max-width: 458px) {
+      margin-bottom: 18px;
+    }
+  }
+
+  &__description {
+    max-width: 230px;
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -ms-line-clamp: 6;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+    display: -webkit-box;
+    display: box;
+    word-wrap: break-word;
+    -webkit-box-orient: vertical;
+    box-orient: vertical;
+
+    @media (max-width: 458px) {
+      margin-left: -70px;
+      max-width: 367px;
+      -ms-line-clamp: 4;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    }
+  }
+
+  &__stars {
+    display: flex;
+    max-width: 230px;
+    justify-content: space-between;
+    margin-top: auto;
+
+    @media (max-width: 458px) {
+      font-size: 18px;
+      align-self: flex-end;
+      gap: 4px;
+    }
+  }
+}
+
+.ant-rate-star:not(:last-child) {
+  margin-right: 0;
+}

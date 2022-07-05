@@ -1,0 +1,17 @@
+.main {
+  width: 100%;
+  max-width: 1010px;
+  padding: 0 35px 20px;
+
+  margin: 0 auto;
+  background-color: #fff;
+
+   @media (max-width: 458px) {
+    padding: 0 10px 20px;
+  }
+  
+}
+
+.container {
+  padding-top: 20px;
+}

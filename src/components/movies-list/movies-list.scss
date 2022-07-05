@@ -1,0 +1,16 @@
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+  justify-content: space-evenly;
+  padding: 35px 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1010px;
+  background-color: #ffffff;
+
+  @media (max-width: 458px) {
+    justify-content: center;
+    gap: 20px;
+  }
+}
