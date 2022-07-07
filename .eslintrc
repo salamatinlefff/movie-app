@@ -39,10 +39,15 @@
     "react/react-in-jsx-scope": "error",
     "semi": "error",
     "react/no-unused-class-component-methods": "error",
-    "react/no-array-index-key": "error",
+    "react/no-array-index-key": "off",
     "indent": ["off", 2],
-    "react/state-in-constructor": "warn",
-    "jsx-a11y/no-autofocus": "off"
+    "react/state-in-constructor": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "import/prefer-default-export": "off",
+    "no-throw-literal": "off",
+    "camelcase": "off",
+    "class-methods-use-this": "off"
   },
   "settings": {
     "import/resolver": {

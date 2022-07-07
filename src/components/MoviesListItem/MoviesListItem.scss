@@ -1,11 +1,9 @@
 .item {
   position: relative;
   display: flex;
-  flex-wrap: nowrap;
   max-width: 451px;
   max-height: 280px;
   width: 100%;
-  font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
@@ -54,7 +52,7 @@
   &__about {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     padding: 10px 20px 15px;
 
     @media (max-width: 458px) {
@@ -75,7 +73,8 @@
 
   &__labels {
     display: flex;
-    gap: 8px;
+    gap: 3px 8px;
+    flex-wrap: wrap;
 
     @media (max-width: 458px) {
       margin-bottom: 18px;
@@ -84,25 +83,11 @@
 
   &__description {
     max-width: 230px;
-    -ms-text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    text-overflow: ellipsis;
     overflow: hidden;
-    -ms-line-clamp: 6;
-    -webkit-line-clamp: 6;
-    line-clamp: 6;
-    display: -webkit-box;
-    display: box;
-    word-wrap: break-word;
-    -webkit-box-orient: vertical;
-    box-orient: vertical;
 
     @media (max-width: 458px) {
       margin-left: -70px;
       max-width: 367px;
-      -ms-line-clamp: 4;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
     }
   }
 
