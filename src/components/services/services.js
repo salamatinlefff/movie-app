@@ -1,6 +1,6 @@
 const API_KEY = 'bd90935d822d9cdd29ec2d8891aaa89a';
 const BASE_URL = 'https://api.themoviedb.org/3/';
-const LANGUAGE = '&language=en-EN';
+const LANGUAGE = '&language=en-US';
 
 export const GENRES = {
   28: 'Action',
@@ -25,14 +25,13 @@ export const GENRES = {
 };
 
 const getData = (url) =>
-  fetch(url)
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw `Что-то пошло не так, ошибка: ${response.status}`;
-    })
-    .catch((err) => console.error(err));
+  fetch(url).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+
+    throw `Что-то пошло не так, ошибка: ${response.status}`;
+  });
 
 export const search = ({ query, page = 1 }) => {
   const url = `${BASE_URL}search/movie?api_key=${API_KEY}${LANGUAGE}&query=${query}}&page=${page}&include_adult=false`;
