@@ -1,10 +1,12 @@
 import { Empty, Input, Layout, Pagination, Tabs } from 'antd';
 import Loader from 'react-js-loader';
+import { debounce } from 'lodash';
 import React, { Component, createRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 
-import MoviesList from '../MoviesList';
-import { debounce, search } from '../services/services';
+import MovieList from '../MovieList';
+import { search, TmdbApiService } from '../../services/services';
+import { TmdbApiServiceProvider } from '../../tmdb-api-context/tmdb-api-context';
 
 import emptyLogo from './empty.svg';
 
@@ -16,12 +18,25 @@ const { TabPane } = Tabs;
 class App extends Component {
   state = { isLoading: true };
 
+  tmdbApiService = new TmdbApiService();
+
   searchInputRef = createRef();
 
   debounceSendRequest = debounce(this.sendRequest, 400);
 
   componentDidMount() {
     const value = 'return';
+
+    this.setState({
+      isLoading: true,
+      query: value,
+      movies: [],
+      page: null,
+      total: null,
+      hasError: null,
+      isEmpty: null,
+      isOffline: null,
+    });
 
     window.addEventListener('offline', () => {
       toast.error('Connection lost');
@@ -39,23 +54,38 @@ class App extends Component {
       });
     });
 
-    search({ query: encodeURIComponent(value).trim(), page: 1 })
-      .then((res) => {
-        this.setState(
-          {
-            query: value,
-            movies: res.results,
-            page: 1,
-            total: res.total_results,
+    this.tmdbApiService.saveGuestSession().then(() => {
+      this.tmdbApiService
+        .search({ query: value, page: 1 })
+        .then((res) => {
+          this.setState(
+            {
+              movies: res.results,
+              page: 1,
+              total: res.total_results,
+              isLoading: false,
+              hasError: false,
+              isEmpty: !res.results.length,
+              isOffline: false,
+            },
+            () => this.searchInputRef.current.focus(),
+          );
+        })
+        .catch(() => this.setState({ isLoading: false, hasError: true, query: value }));
+
+      this.tmdbApiService
+        .getRatedMovie()
+        .then((res) => {
+          this.setState({
             isLoading: false,
-            isError: false,
-            isEmpty: !res.results.length,
+            hasError: false,
+            ratedMovie: res.results,
+            total: res.total_results,
             isOffline: false,
-          },
-          () => this.searchInputRef.current.focus(),
-        );
-      })
-      .catch(() => this.setState({ isLoading: false, isError: true, query: value }));
+          });
+        })
+        .catch(() => this.setState({ isLoading: false, hasError: true, query: value }));
+    });
   }
 
   onChangePagination = (page) => {
@@ -68,13 +98,13 @@ class App extends Component {
         this.setState({
           page,
           movies: res.results,
-          isError: false,
+          hasError: false,
           total: res.total_results,
           isEmpty: !res.results.length,
           isOffline: false,
         });
       })
-      .catch(() => this.setState({ isLoading: false, isError: true }));
+      .catch(() => this.setState({ isLoading: false, hasError: true }));
   };
 
   onChangeSearchInput = ({ target: { value } }) => {
@@ -94,77 +124,132 @@ class App extends Component {
     this.debounceSendRequest({ value, page });
   };
 
+  onChangeTab = (tab) => {
+    const { query } = this.state;
+
+    if (tab === 'rated') {
+      this.tmdbApiService.getRatedMovie().then((res) => {
+        this.setState({
+          isLoading: false,
+          hasError: false,
+          ratedMovie: res.results,
+          total: res.total_results,
+          isEmpty: !res.results.length,
+          isOffline: false,
+        });
+      });
+    }
+
+    this.tmdbApiService
+      .search({ query: encodeURIComponent(query).trim(), page: 1 })
+      .then((res) => {
+        this.setState(
+          {
+            movies: res.results,
+            page: 1,
+            total: res.total_results,
+            isLoading: false,
+            hasError: false,
+            isEmpty: !res.results.length,
+            isOffline: false,
+          },
+          () => this.searchInputRef.current.focus(),
+        );
+      })
+      .catch(() => this.setState({ isLoading: false, hasError: true }));
+  };
+
   sendRequest({ value, page }) {
     search({ query: encodeURIComponent(value).trim(), page })
       .then((res) => {
         this.setState({
           movies: res.results,
           isLoading: false,
-          isError: false,
+          hasError: false,
           total: res.total_results,
           isEmpty: !res.results.length,
           isOffline: false,
         });
       })
-      .catch(() => this.setState({ isLoading: false, isError: true }));
+      .catch(() => this.setState({ isLoading: false, hasError: true }));
   }
 
   render() {
-    const { movies, query, total, page, isLoading, isError, isEmpty, isOffline } = this.state;
+    const { movies, query, total, page, isLoading, hasError, isEmpty, isOffline, ratedMovie } =
+      this.state;
 
-    console.log('movies :', movies);
+    let filteredMovie;
 
-    const hasData = !(isLoading || isError || isEmpty);
-    const movieList = hasData ? <MoviesList movies={movies} /> : null;
+    if (movies && ratedMovie) {
+      filteredMovie = [...movies].reduce((res, movie) => {
+        ratedMovie.forEach((rated) => {
+          if (rated.id === movie.id) {
+            movie.rating = rated.rating;
+          }
+        });
+
+        res.push(movie);
+        return res;
+      }, []);
+    }
+
+    const hasData = !(isLoading || hasError || isEmpty) && filteredMovie;
     const spinner = isLoading ? <Spinner /> : null;
-    const error = isError && !isOffline ? <ErrorMessage /> : null;
+    const error = hasError && !isOffline ? <ErrorMessage /> : null;
     const empty = isEmpty ? <EmptyMessage /> : null;
 
     return (
-      <Layout className="main">
-        <Tabs defaultActiveKey="1" centered size="large">
-          <TabPane className="content-container" tab="Search" key="1">
-            <Input
-              ref={this.searchInputRef}
-              placeholder="Type to search..."
-              allowClear
-              value={query}
-              onChange={this.onChangeSearchInput}
+      <TmdbApiServiceProvider value={this.tmdbApiService}>
+        <Layout className="main">
+          <Tabs onTabClick={this.onChangeTab} defaultActiveKey="1" centered size="large">
+            <TabPane className="content-container" tab="Search" key="search">
+              <Input
+                ref={this.searchInputRef}
+                placeholder="Type to search..."
+                allowClear
+                value={query}
+                onChange={this.onChangeSearchInput}
+              />
+              {spinner}
+              {hasData && <MovieList movies={filteredMovie} />}
+              {error}
+              {empty}
+            </TabPane>
+
+            <TabPane className="content-container" tab="Rated" key="rated">
+              {!ratedMovie && <Spinner />}
+
+              {ratedMovie && <MovieList movies={ratedMovie} />}
+            </TabPane>
+          </Tabs>
+
+          {hasData && (
+            <Pagination
+              showQuickJumper
+              size="small"
+              total={total}
+              showSizeChanger={false}
+              onChange={this.onChangePagination}
+              current={page}
+              pageSize={20}
             />
-            {spinner}
-            {movieList}
-            {error}
-            {empty}
-          </TabPane>
+          )}
 
-          <TabPane className="content-container" tab="Rated" key="2" />
-        </Tabs>
-
-        {hasData && (
-          <Pagination
-            showQuickJumper
-            size="small"
-            total={total}
-            showSizeChanger={false}
-            onChange={this.onChangePagination}
-            current={page}
-            pageSize={20}
+          {/* notify container */}
+          <ToastContainer
+            position="top-left"
+            style={{ fontSize: '20px' }}
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
           />
-        )}
-
-        <ToastContainer
-          position="top-left"
-          style={{ fontSize: '20px' }}
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-      </Layout>
+        </Layout>
+      </TmdbApiServiceProvider>
     );
   }
 }

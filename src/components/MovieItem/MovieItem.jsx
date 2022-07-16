@@ -3,11 +3,22 @@ import { format } from 'date-fns';
 import React, { createRef, useEffect, useState } from 'react';
 import TextTruncate from 'react-text-truncate';
 
+import './MovieItem.scss';
+
 import ItemLabel from '../ItemLabel';
+import { TmdbApiServiceConsumer } from '../../tmdb-api-context/tmdb-api-context';
+import { averageColor } from '../../utils/utils';
 
-import './MoviesListItem.scss';
-
-export default function MoviesListItem({ title, description, poster, release, average, genres }) {
+export default function MoviesListItem({
+  id,
+  title,
+  description,
+  poster,
+  release,
+  average,
+  genres,
+  rating,
+}) {
   const descriptionRef = createRef();
 
   const [descrHeight, setDescrHeight] = useState(0);
@@ -34,7 +45,9 @@ export default function MoviesListItem({ title, description, poster, release, av
       </div>
 
       <div className="item__about">
-        <span className="item__grade">{average || 'N/A'}</span>
+        <span className="item__grade" style={{ borderColor: averageColor(average) }}>
+          {average.toFixed(1) || 'N/A'}
+        </span>
         <h2 className="item__title">{title || 'N/A'}</h2>
 
         <span className="item__release-time">
@@ -63,7 +76,17 @@ export default function MoviesListItem({ title, description, poster, release, av
           />
         </div>
 
-        <Rate className="item__stars" allowHalf defaultValue={0} count={10} />
+        <TmdbApiServiceConsumer>
+          {({ rateMovie }) => (
+            <Rate
+              className="item__stars"
+              allowHalf
+              onChange={(rate) => rateMovie(id, rate)}
+              defaultValue={rating || 0}
+              count={10}
+            />
+          )}
+        </TmdbApiServiceConsumer>
       </div>
     </li>
   );
