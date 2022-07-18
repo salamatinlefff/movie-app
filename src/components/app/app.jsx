@@ -16,7 +16,7 @@ import './App.scss';
 const { TabPane } = Tabs;
 
 class App extends Component {
-  state = { isLoading: true };
+  state = { isLoading: false, rated: { ratedMovie: [] } };
 
   tmdbApiService = new TmdbApiService();
 
@@ -33,6 +33,7 @@ class App extends Component {
       movies: [],
       page: null,
       total: null,
+      rated: { ratedMovie: [], ratedTotal: null, ratedPage: null, ratedIsEmpty: null },
       hasError: null,
       isEmpty: null,
       isOffline: null,
@@ -62,6 +63,7 @@ class App extends Component {
             {
               movies: res.results,
               page: 1,
+              rated: { ratedMovie: [], ratedTotal: null, ratedPage: null, ratedIsEmpty: null },
               total: res.total_results,
               isLoading: false,
               hasError: false,
@@ -79,8 +81,12 @@ class App extends Component {
           this.setState({
             isLoading: false,
             hasError: false,
-            ratedMovie: res.results,
-            total: res.total_results,
+            rated: {
+              ratedPage: res.page,
+              ratedMovie: res.results,
+              total: res.total_results,
+              isEmpty: !res.results.length,
+            },
             isOffline: false,
           });
         })
@@ -135,13 +141,15 @@ class App extends Component {
       });
 
       return this.tmdbApiService.getRatedMovie().then((res) => {
-        console.log('res :', res);
         this.setState({
           isLoading: false,
           hasError: false,
-          ratedMovie: res.results,
-          total: res.total_results,
-          isEmpty: !res.results.length,
+          rated: {
+            ratedPage: res.page,
+            ratedMovie: res.results,
+            total: res.total_results,
+            isEmpty: !res.results.length,
+          },
           isOffline: false,
         });
       });
@@ -150,7 +158,6 @@ class App extends Component {
     this.tmdbApiService
       .search({ query: encodeURIComponent(query).trim(), page: 1 })
       .then((res) => {
-        console.log('res :', res);
         this.setState(
           {
             movies: res.results,
@@ -184,8 +191,17 @@ class App extends Component {
   }
 
   render() {
-    const { movies, query, total, page, isLoading, hasError, isEmpty, isOffline, ratedMovie } =
-      this.state;
+    const {
+      movies,
+      query,
+      total,
+      page,
+      isLoading,
+      hasError,
+      isEmpty,
+      isOffline,
+      rated: { ratedMovie, ratedTotal, ratedPage, ratedIsEmpty },
+    } = this.state;
 
     let filteredMovie;
 
@@ -206,6 +222,7 @@ class App extends Component {
     const spinner = isLoading ? <Spinner /> : null;
     const error = hasError && !isOffline ? <ErrorMessage /> : null;
     const empty = isEmpty ? <EmptyMessage /> : null;
+    const ratedEmpty = ratedIsEmpty ? <EmptyMessage /> : null;
 
     return (
       <TmdbApiServiceProvider value={this.tmdbApiService}>
@@ -223,26 +240,37 @@ class App extends Component {
               {hasData && <MovieList movies={filteredMovie} />}
               {error}
               {empty}
+              {hasData && (
+                <Pagination
+                  showQuickJumper
+                  size="small"
+                  total={total}
+                  showSizeChanger={false}
+                  onChange={this.onChangePagination}
+                  current={page}
+                  pageSize={20}
+                />
+              )}
             </TabPane>
 
             <TabPane className="content-container" tab="Rated" key="rated">
               {!ratedMovie && <Spinner />}
+              {ratedEmpty}
 
               {ratedMovie && <MovieList movies={ratedMovie} />}
+              {hasData && (
+                <Pagination
+                  showQuickJumper
+                  size="small"
+                  total={ratedTotal}
+                  showSizeChanger={false}
+                  onChange={this.onChangePagination}
+                  current={ratedPage}
+                  pageSize={20}
+                />
+              )}
             </TabPane>
           </Tabs>
-
-          {hasData && (
-            <Pagination
-              showQuickJumper
-              size="small"
-              total={total}
-              showSizeChanger={false}
-              onChange={this.onChangePagination}
-              current={page}
-              pageSize={20}
-            />
-          )}
 
           {/* notify container */}
           <ToastContainer

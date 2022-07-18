@@ -10,11 +10,11 @@ export default function MoviesList({ movies }) {
       {movies.map((movie) => {
         const {
           id,
-          original_title,
-          overview,
-          poster_path,
-          release_date,
-          vote_average,
+          originalTitle,
+          description,
+          posterPath,
+          releaseDate,
+          voteAverage,
           genres,
           rating,
         } = movie;
@@ -23,11 +23,11 @@ export default function MoviesList({ movies }) {
           <MovieItem
             key={id}
             id={id}
-            title={original_title}
-            description={overview}
-            poster={poster_path}
-            release={release_date}
-            average={vote_average}
+            title={originalTitle}
+            description={description}
+            poster={posterPath}
+            release={releaseDate}
+            average={voteAverage}
             genres={genres}
             rating={rating}
           />

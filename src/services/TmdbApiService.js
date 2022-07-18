@@ -40,7 +40,7 @@ class TmdbApiService {
 
     const data = await response.json();
 
-    this.transformData(data.results);
+    data.results = this.transformData(data.results);
 
     return data;
   };
@@ -74,12 +74,12 @@ class TmdbApiService {
     );
   };
 
-  createGuestSession = () =>
-    this.getData(`${this.BASE_URL_AUTH_GUEST}/new?api_key=${this.API_KEY}`);
+  createGuestSession = () => fetch(`${this.BASE_URL_AUTH_GUEST}/new?api_key=${this.API_KEY}`);
 
   saveGuestSession = async () => {
     if (!localStorage.getItem('guestSession')) {
-      const guestData = await this.createGuestSession();
+      const response = await this.createGuestSession();
+      const guestData = await response.json();
 
       if (guestData.success) {
         localStorage.setItem('guestSession', guestData.guest_session_id);
@@ -92,15 +92,17 @@ class TmdbApiService {
 
   transformGenres = (arr) => arr.map((genre) => this.GENRES[genre]);
 
-  transformData = (items) => {
-    [...items].map((item) => {
-      item.genres = this.transformGenres(item.genre_ids);
-
-      delete item.genre_ids;
-
-      return item;
-    });
-  };
+  transformData = (items) =>
+    [...items].map((item) => ({
+      genres: this.transformGenres(item.genre_ids),
+      id: item.id,
+      originalTitle: item.original_title,
+      description: item.overview,
+      posterPath: item.poster_path,
+      releaseDate: item.release_date,
+      voteAverage: item.vote_average,
+      rating: item.rating,
+    }));
 
   get apiKeyGuest() {
     return this.apiKeyGuestSession;
