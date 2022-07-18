@@ -1,7 +1,6 @@
 import React from 'react';
 
 import MovieItem from '../MovieItem';
-import { GENRES } from '../../services/services';
 
 import './MovieList.scss';
 
@@ -16,11 +15,9 @@ export default function MoviesList({ movies }) {
           poster_path,
           release_date,
           vote_average,
-          genre_ids,
+          genres,
           rating,
         } = movie;
-
-        const genres = genre_ids.map((genreId) => GENRES[genreId]);
 
         return (
           <MovieItem

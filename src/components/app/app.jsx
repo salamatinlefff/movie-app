@@ -5,8 +5,8 @@ import React, { Component, createRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 
 import MovieList from '../MovieList';
-import { search, TmdbApiService } from '../../services/services';
-import { TmdbApiServiceProvider } from '../../tmdb-api-context/tmdb-api-context';
+import { TmdbApiService } from '../../services/TmdbApiService';
+import { TmdbApiServiceProvider } from '../../tmdbApiContext';
 
 import emptyLogo from './empty.svg';
 
@@ -93,7 +93,8 @@ class App extends Component {
 
     this.setState({ page });
 
-    search({ query: encodeURIComponent(query).trim(), page })
+    this.tmdbApiService
+      .search({ query: encodeURIComponent(query).trim(), page })
       .then((res) => {
         this.setState({
           page,
@@ -128,7 +129,13 @@ class App extends Component {
     const { query } = this.state;
 
     if (tab === 'rated') {
-      this.tmdbApiService.getRatedMovie().then((res) => {
+      this.setState({
+        isLoading: true,
+        total: null,
+      });
+
+      return this.tmdbApiService.getRatedMovie().then((res) => {
+        console.log('res :', res);
         this.setState({
           isLoading: false,
           hasError: false,
@@ -143,6 +150,7 @@ class App extends Component {
     this.tmdbApiService
       .search({ query: encodeURIComponent(query).trim(), page: 1 })
       .then((res) => {
+        console.log('res :', res);
         this.setState(
           {
             movies: res.results,
@@ -160,7 +168,8 @@ class App extends Component {
   };
 
   sendRequest({ value, page }) {
-    search({ query: encodeURIComponent(value).trim(), page })
+    this.tmdbApiService
+      .search({ query: encodeURIComponent(value).trim(), page })
       .then((res) => {
         this.setState({
           movies: res.results,

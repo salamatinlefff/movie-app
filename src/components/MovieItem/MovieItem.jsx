@@ -6,8 +6,8 @@ import TextTruncate from 'react-text-truncate';
 import './MovieItem.scss';
 
 import ItemLabel from '../ItemLabel';
-import { TmdbApiServiceConsumer } from '../../tmdb-api-context/tmdb-api-context';
-import { averageColor } from '../../utils/utils';
+import { TmdbApiServiceConsumer } from '../../tmdbApiContext';
+import { averageColor } from '../../utils';
 
 export default function MoviesListItem({
   id,
