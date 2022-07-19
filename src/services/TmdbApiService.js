@@ -45,21 +45,23 @@ class TmdbApiService {
     return data;
   };
 
-  search = async ({ query, page = 1 }) => {
+  search = async ({ query, page }) => {
     const url = `${this.BASE_URL}/search/movie?api_key=${this.API_KEY}&${this.LANGUAGE}&query=${query}}&page=${page}&include_adult=false`;
 
     return this.getData(url);
   };
 
-  getRatedMovie = async () => {
+  getRatedMovie = async ({ page }) => {
     if (!this.apiKeyGuest) await this.saveGuestSession();
 
-    const url = `https://api.themoviedb.org/3/guest_session/${this.apiKeyGuest}/rated/movies?api_key=${this.API_KEY}&${this.LANGUAGE}&${this.SORT_BY}`;
+    const url = `https://api.themoviedb.org/3/guest_session/${this.apiKeyGuest}/rated/movies?api_key=${this.API_KEY}&${this.LANGUAGE}&page=${page}&${this.SORT_BY}`;
 
     return this.getData(url);
   };
 
   rateMovie = async (id, rate) => {
+    if (!this.apiKeyGuest) await this.saveGuestSession();
+
     fetch(
       `${this.BASE_URL}/movie/${id}/rating?api_key=${this.API_KEY}&guest_session_id=${this.apiKeyGuest}`,
       {
@@ -82,6 +84,7 @@ class TmdbApiService {
       const guestData = await response.json();
 
       if (guestData.success) {
+        localStorage.clear();
         localStorage.setItem('guestSession', guestData.guest_session_id);
       }
     }

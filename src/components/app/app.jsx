@@ -1,290 +1,169 @@
-import { Empty, Input, Layout, Pagination, Tabs } from 'antd';
-import Loader from 'react-js-loader';
-import { debounce } from 'lodash';
-import React, { Component, createRef } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-
-import MovieList from '../MovieList';
-import { TmdbApiService } from '../../services/TmdbApiService';
-import { TmdbApiServiceProvider } from '../../tmdbApiContext';
-
-import emptyLogo from './empty.svg';
-
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
+
+import React, { Component } from 'react';
+import { Layout, Tabs } from 'antd';
+
+import { TmdbApiService } from '../../services/TmdbApiService';
+import { TmdbApiServiceProvider } from '../../tmdbApiContext';
+import { NotifyContainer } from '../hoc-helper';
+import { notifyMessage } from '../../utils';
+import { loadLocalRated } from '../../services';
+import ErrorBoundary from '../ErrorBoundary';
+import EmptyIndicator from '../EmptyIndicator';
+import RatedPage from '../RatedPage';
+import SearchPage from '../SearchPage';
 
 const { TabPane } = Tabs;
 
 class App extends Component {
-  state = { isLoading: false, rated: { ratedMovie: [] } };
+  state = {};
 
   tmdbApiService = new TmdbApiService();
 
-  searchInputRef = createRef();
-
-  debounceSendRequest = debounce(this.sendRequest, 400);
-
   componentDidMount() {
-    const value = 'return';
-
     this.setState({
-      isLoading: true,
-      query: value,
-      movies: [],
-      page: null,
-      total: null,
-      rated: { ratedMovie: [], ratedTotal: null, ratedPage: null, ratedIsEmpty: null },
-      hasError: null,
-      isEmpty: null,
-      isOffline: null,
+      isOffline: false,
+      hasError: false,
     });
 
     window.addEventListener('offline', () => {
-      toast.error('Connection lost');
+      notifyMessage('error', 'Connection lost!');
 
       this.setState({
         isOffline: true,
+        hasError: false,
       });
     });
 
     window.addEventListener('online', () => {
-      toast.success('Connection restored');
+      notifyMessage('success', 'Connection restored!');
 
       this.setState({
         isOffline: false,
+        hasError: false,
       });
-    });
-
-    this.tmdbApiService.saveGuestSession().then(() => {
-      this.tmdbApiService
-        .search({ query: value, page: 1 })
-        .then((res) => {
-          this.setState(
-            {
-              movies: res.results,
-              page: 1,
-              rated: { ratedMovie: [], ratedTotal: null, ratedPage: null, ratedIsEmpty: null },
-              total: res.total_results,
-              isLoading: false,
-              hasError: false,
-              isEmpty: !res.results.length,
-              isOffline: false,
-            },
-            () => this.searchInputRef.current.focus(),
-          );
-        })
-        .catch(() => this.setState({ isLoading: false, hasError: true, query: value }));
-
-      this.tmdbApiService
-        .getRatedMovie()
-        .then((res) => {
-          this.setState({
-            isLoading: false,
-            hasError: false,
-            rated: {
-              ratedPage: res.page,
-              ratedMovie: res.results,
-              total: res.total_results,
-              isEmpty: !res.results.length,
-            },
-            isOffline: false,
-          });
-        })
-        .catch(() => this.setState({ isLoading: false, hasError: true, query: value }));
     });
   }
 
-  onChangePagination = (page) => {
-    const { query } = this.state;
-
-    this.setState({ page });
-
-    this.tmdbApiService
-      .search({ query: encodeURIComponent(query).trim(), page })
-      .then((res) => {
-        this.setState({
-          page,
-          movies: res.results,
-          hasError: false,
-          total: res.total_results,
-          isEmpty: !res.results.length,
-          isOffline: false,
-        });
-      })
-      .catch(() => this.setState({ isLoading: false, hasError: true }));
+  onChangeSearchPage = (searchPage) => {
+    this.setState((prevState) => ({ searchPage: { ...prevState.searchPage, ...searchPage } }));
   };
 
-  onChangeSearchInput = ({ target: { value } }) => {
-    const { query, page } = this.state;
-
-    this.setState({
-      query: value,
-    });
-
-    if (value.trim() === '') return null;
-    if (query === value.trim()) return null;
-
-    this.setState({
-      isLoading: true,
-    });
-
-    this.debounceSendRequest({ value, page });
+  onChangeRatedPage = (ratedPage) => {
+    this.setState((prevState) => ({ ratedPage: { ...prevState.ratedPage, ...ratedPage } }));
   };
 
   onChangeTab = (tab) => {
-    const { query } = this.state;
-
-    if (tab === 'rated') {
-      this.setState({
-        isLoading: true,
-        total: null,
-      });
-
-      return this.tmdbApiService.getRatedMovie().then((res) => {
-        this.setState({
-          isLoading: false,
-          hasError: false,
-          rated: {
-            ratedPage: res.page,
-            ratedMovie: res.results,
-            total: res.total_results,
-            isEmpty: !res.results.length,
-          },
-          isOffline: false,
-        });
-      });
-    }
-
-    this.tmdbApiService
-      .search({ query: encodeURIComponent(query).trim(), page: 1 })
-      .then((res) => {
-        this.setState(
-          {
-            movies: res.results,
-            page: 1,
-            total: res.total_results,
-            isLoading: false,
-            hasError: false,
-            isEmpty: !res.results.length,
-            isOffline: false,
-          },
-          () => this.searchInputRef.current.focus(),
-        );
-      })
-      .catch(() => this.setState({ isLoading: false, hasError: true }));
-  };
-
-  sendRequest({ value, page }) {
-    this.tmdbApiService
-      .search({ query: encodeURIComponent(value).trim(), page })
-      .then((res) => {
-        this.setState({
-          movies: res.results,
-          isLoading: false,
-          hasError: false,
-          total: res.total_results,
-          isEmpty: !res.results.length,
-          isOffline: false,
-        });
-      })
-      .catch(() => this.setState({ isLoading: false, hasError: true }));
-  }
-
-  render() {
     const {
-      movies,
-      query,
-      total,
-      page,
-      isLoading,
-      hasError,
-      isEmpty,
-      isOffline,
-      rated: { ratedMovie, ratedTotal, ratedPage, ratedIsEmpty },
+      searchPage: { query, page },
     } = this.state;
 
-    let filteredMovie;
-
-    if (movies && ratedMovie) {
-      filteredMovie = [...movies].reduce((res, movie) => {
-        ratedMovie.forEach((rated) => {
-          if (rated.id === movie.id) {
-            movie.rating = rated.rating;
-          }
-        });
-
-        res.push(movie);
-        return res;
-      }, []);
+    switch (tab) {
+      case 'search':
+        return this.getSearchMovies({ query, page });
+      case 'rated':
+        return this.getRatedMovies({ page: 1 });
+      default:
+        return null;
     }
+  };
 
-    const hasData = !(isLoading || hasError || isEmpty) && filteredMovie;
-    const spinner = isLoading ? <Spinner /> : null;
-    const error = hasError && !isOffline ? <ErrorMessage /> : null;
-    const empty = isEmpty ? <EmptyMessage /> : null;
-    const ratedEmpty = ratedIsEmpty ? <EmptyMessage /> : null;
+  getSearchMovies = async ({ query, page }) => {
+    this.onChangeSearchPage({
+      isLoading: true,
+    });
+    this.setState({ hasError: false });
+
+    try {
+      const res = await this.tmdbApiService.search({
+        query: encodeURIComponent(query).trim(),
+        page,
+      });
+
+      this.onChangeSearchPage({
+        page,
+        movies: this.filteredMovie(res.results),
+        total: res.total_results,
+        isEmpty: !res.results.length,
+      });
+    } catch {
+      this.setState({ hasError: true });
+    } finally {
+      this.onChangeSearchPage({ isLoading: false });
+    }
+  };
+
+  getRatedMovies = async ({ page }) => {
+    this.onChangeRatedPage({
+      isLoading: true,
+    });
+
+    this.setState({ hasError: false });
+
+    try {
+      const res = await this.tmdbApiService.getRatedMovie({ page });
+
+      this.onChangeRatedPage({
+        page: res.page,
+        movies: res.results,
+        total: res.total_results,
+        isEmpty: !res.results.length,
+      });
+    } catch {
+      this.setState({ hasError: true });
+    } finally {
+      this.onChangeSearchPage({ isLoading: false });
+    }
+  };
+
+  filteredMovie = (searchMovies) => {
+    const ratedMovies = loadLocalRated();
+
+    return [...searchMovies].reduce((res, movie) => {
+      ratedMovies.forEach((rated) => {
+        if (rated.id === movie.id) {
+          movie.rating = rated.rating;
+        }
+      });
+
+      res.push(movie);
+
+      return res;
+    }, []);
+  };
+
+  render() {
+    const { isOffline, hasError, searchPage, ratedPage } = this.state;
 
     return (
       <TmdbApiServiceProvider value={this.tmdbApiService}>
         <Layout className="main">
-          <Tabs onTabClick={this.onChangeTab} defaultActiveKey="1" centered size="large">
+          <Tabs onTabClick={this.onChangeTab} defaultActiveKey="search" centered size="large">
             <TabPane className="content-container" tab="Search" key="search">
-              <Input
-                ref={this.searchInputRef}
-                placeholder="Type to search..."
-                allowClear
-                value={query}
-                onChange={this.onChangeSearchInput}
-              />
-              {spinner}
-              {hasData && <MovieList movies={filteredMovie} />}
-              {error}
-              {empty}
-              {hasData && (
-                <Pagination
-                  showQuickJumper
-                  size="small"
-                  total={total}
-                  showSizeChanger={false}
-                  onChange={this.onChangePagination}
-                  current={page}
-                  pageSize={20}
-                />
+              {!isOffline && (
+                <ErrorBoundary>
+                  <SearchPage
+                    onChangeSearchPage={this.onChangeSearchPage}
+                    searchPage={searchPage}
+                    sendRequest={this.getSearchMovies}
+                  />
+                </ErrorBoundary>
               )}
             </TabPane>
 
             <TabPane className="content-container" tab="Rated" key="rated">
-              {!ratedMovie && <Spinner />}
-              {ratedEmpty}
-
-              {ratedMovie && <MovieList movies={ratedMovie} />}
-              {hasData && (
-                <Pagination
-                  showQuickJumper
-                  size="small"
-                  total={ratedTotal}
-                  showSizeChanger={false}
-                  onChange={this.onChangePagination}
-                  current={ratedPage}
-                  pageSize={20}
-                />
-              )}
+              <ErrorBoundary>
+                <RatedPage getMovie={this.getRatedMovies} ratedPage={ratedPage} />
+              </ErrorBoundary>
             </TabPane>
           </Tabs>
 
-          {/* notify container */}
-          <ToastContainer
-            position="top-left"
-            style={{ fontSize: '20px' }}
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
+          {hasError && <EmptyIndicator label="Connection to server failed... Please try again" />}
+          {hasError && notifyMessage('error', 'Connection to server failed... Please try again')}
+          {isOffline && <EmptyIndicator label="Please reconnect your internet" />}
+
+          <NotifyContainer />
         </Layout>
       </TmdbApiServiceProvider>
     );
@@ -292,38 +171,3 @@ class App extends Component {
 }
 
 export default App;
-
-function EmptyMessage() {
-  return (
-    <div
-      style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-    >
-      <Empty
-        image={emptyLogo}
-        imageStyle={{
-          height: 120,
-        }}
-        description={
-          <span style={{ fontSize: '20px' }}>Oops! We didn&apos;t find anything =(</span>
-        }
-      />
-    </div>
-  );
-}
-
-function ErrorMessage() {
-  toast.error('Something wrong. Please try later..', {
-    style: {
-      fontSize: '17px',
-      height: '100px',
-    },
-  });
-}
-
-function Spinner() {
-  return (
-    <div className="spinner-container">
-      <Loader type="bubble-loop" bgColor="rgb(24, 144, 255)" size={100} />
-    </div>
-  );
-}

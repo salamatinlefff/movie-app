@@ -1,3 +1,3 @@
-import { averageColor } from './utils';
+import { averageColor, notifyMessage } from './utils';
 
-export { averageColor };
+export { averageColor, notifyMessage };

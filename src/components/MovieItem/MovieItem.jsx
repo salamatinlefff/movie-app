@@ -8,6 +8,7 @@ import './MovieItem.scss';
 import ItemLabel from '../ItemLabel';
 import { TmdbApiServiceConsumer } from '../../tmdbApiContext';
 import { averageColor } from '../../utils';
+import { saveLocalRated } from '../../services';
 
 export default function MoviesListItem({
   id,
@@ -46,7 +47,7 @@ export default function MoviesListItem({
 
       <div className="item__about">
         <span className="item__grade" style={{ borderColor: averageColor(average) }}>
-          {average.toFixed(1) || 'N/A'}
+          {parseFloat(average).toFixed(1) || 'N/A'}
         </span>
         <h2 className="item__title">{title || 'N/A'}</h2>
 
@@ -81,7 +82,13 @@ export default function MoviesListItem({
             <Rate
               className="item__stars"
               allowHalf
-              onChange={(rate) => rateMovie(id, rate)}
+              onChange={(rate) => {
+                rateMovie(id, rate);
+                saveLocalRated({
+                  id,
+                  rating: rate,
+                });
+              }}
               defaultValue={rating || 0}
               count={10}
             />

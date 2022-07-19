@@ -1,3 +1,14 @@
+import { toast } from 'react-toastify';
+
+function notifyMessage(type, message) {
+  toast[type](message, {
+    style: {
+      fontSize: '17px',
+      height: '100px',
+    },
+  });
+}
+
 const COLORS = {
   bad: '#E90000',
   low: '#E97E00',
@@ -12,4 +23,4 @@ const averageColor = (digit) => {
   if (digit > 7) return COLORS.high;
 };
 
-export { averageColor };
+export { averageColor, notifyMessage };
