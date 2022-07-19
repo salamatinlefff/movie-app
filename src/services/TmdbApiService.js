@@ -34,6 +34,8 @@ class TmdbApiService {
   };
 
   getData = async (url) => {
+    if (!this.apiKeyGuest) await this.saveGuestSession();
+
     const response = await fetch(url);
 
     if (!response.ok) throw new Error(`Что-то пошло не так, ошибка: ${response.status}`);

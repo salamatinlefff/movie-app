@@ -113,7 +113,7 @@ class App extends Component {
     } catch {
       this.setState({ hasError: true });
     } finally {
-      this.onChangeSearchPage({ isLoading: false });
+      this.onChangeRatedPage({ isLoading: false });
     }
   };
 
