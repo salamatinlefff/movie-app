@@ -11,15 +11,15 @@ import EmptyIndicator from '../EmptyIndicator';
 export default class SearchPage extends Component {
   searchInputRef = createRef();
 
-  debounceSendRequest = debounce(this.props.sendRequest, 400);
+  debounceGetSearchMovies = debounce(this.props.getSearchMovies, 400);
 
   componentDidMount() {
-    const { onChangeSearchPage, sendRequest } = this.props;
+    const { onChangeSearchPage, getSearchMovies } = this.props;
 
     const query = 'return';
     const page = 1;
 
-    sendRequest({ query, page });
+    getSearchMovies({ query, page });
     onChangeSearchPage({ query, page });
   }
 
@@ -30,10 +30,10 @@ export default class SearchPage extends Component {
   onChangePagination = (page) => {
     const {
       searchPage: { query },
-      sendRequest,
+      getSearchMovies,
     } = this.props;
 
-    sendRequest({ query, page });
+    getSearchMovies({ query, page });
   };
 
   onChangeSearchInput = ({ target: { value } }) => {
@@ -50,7 +50,7 @@ export default class SearchPage extends Component {
     if (query.trim() === '' && value.trim() === '') return onChangeSearchPage({ isEmpty: true });
     if (query.trim() === value.trim()) return null;
 
-    this.debounceSendRequest({ query: value, page });
+    this.debounceGetSearchMovies({ query: value, page });
   };
 
   render() {

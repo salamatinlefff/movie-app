@@ -6,7 +6,7 @@ import TextTruncate from 'react-text-truncate';
 import './MovieItem.scss';
 
 import ItemLabel from '../ItemLabel';
-import { TmdbApiServiceConsumer } from '../../tmdbApiContext';
+import { TmdbApiServiceConsumer } from '../TmdbApiContext';
 import { averageColor } from '../../utils';
 import { saveLocalRated } from '../../services';
 

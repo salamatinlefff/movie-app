@@ -5,7 +5,7 @@ import React, { Component } from 'react';
 import { Layout, Tabs } from 'antd';
 
 import { TmdbApiService } from '../../services/TmdbApiService';
-import { TmdbApiServiceProvider } from '../../tmdbApiContext';
+import { TmdbApiServiceProvider } from '../TmdbApiContext';
 import { NotifyContainer } from '../hoc-helper';
 import { notifyMessage } from '../../utils';
 import { loadLocalRated } from '../../services';
@@ -73,6 +73,7 @@ class App extends Component {
     this.onChangeSearchPage({
       isLoading: true,
     });
+
     this.setState({ hasError: false });
 
     try {
@@ -136,31 +137,37 @@ class App extends Component {
   render() {
     const { isOffline, hasError, searchPage, ratedPage } = this.state;
 
+    const textError = 'Connection to server failed... Please try again';
+
+    const hasData = !isOffline && !hasError;
+
     return (
       <TmdbApiServiceProvider value={this.tmdbApiService}>
         <Layout className="main">
           <Tabs onTabClick={this.onChangeTab} defaultActiveKey="search" centered size="large">
             <TabPane className="content-container" tab="Search" key="search">
-              {!isOffline && (
+              {hasData && (
                 <ErrorBoundary>
                   <SearchPage
                     onChangeSearchPage={this.onChangeSearchPage}
+                    getSearchMovies={this.getSearchMovies}
                     searchPage={searchPage}
-                    sendRequest={this.getSearchMovies}
                   />
                 </ErrorBoundary>
               )}
             </TabPane>
 
             <TabPane className="content-container" tab="Rated" key="rated">
-              <ErrorBoundary>
-                <RatedPage getMovie={this.getRatedMovies} ratedPage={ratedPage} />
-              </ErrorBoundary>
+              {hasData && (
+                <ErrorBoundary>
+                  <RatedPage getRatedMovies={this.getRatedMovies} ratedPage={ratedPage} />
+                </ErrorBoundary>
+              )}
             </TabPane>
           </Tabs>
 
-          {hasError && <EmptyIndicator label="Connection to server failed... Please try again" />}
-          {hasError && notifyMessage('error', 'Connection to server failed... Please try again')}
+          {hasError && <EmptyIndicator label={textError} />}
+          {hasError && notifyMessage('error', textError)}
           {isOffline && <EmptyIndicator label="Please reconnect your internet" />}
 
           <NotifyContainer />

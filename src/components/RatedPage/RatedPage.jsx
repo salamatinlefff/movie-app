@@ -9,9 +9,9 @@ import './RatedPage.scss';
 
 export default class RatedPage extends Component {
   onChangePagination = (page) => {
-    const { getMovie } = this.props;
+    const { getRatedMovies } = this.props;
 
-    getMovie({ page });
+    getRatedMovies({ page });
   };
 
   render() {
