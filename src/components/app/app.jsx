@@ -4,9 +4,9 @@ import './App.scss';
 import React, { Component } from 'react';
 import { Layout, Tabs } from 'antd';
 
-import { TmdbApiServiceProvider } from '../TmdbApiContext';
 import { NotifyContainer } from '../hoc-helper';
 import { notifyMessage } from '../../utils';
+import { ServicesProvider } from '../ServicesContext';
 import { TmdbApiService, LocalStorageService } from '../../services';
 import ErrorBoundary from '../ErrorBoundary';
 import EmptyView from '../EmptyView';
@@ -147,7 +147,7 @@ class App extends Component {
     const hasErrors = isOffline && hasError;
 
     return (
-      <TmdbApiServiceProvider value={this.services}>
+      <ServicesProvider value={this.services}>
         <Layout className="main">
           <Tabs onTabClick={this.onChangeTab} defaultActiveKey="search" centered size="large">
             <TabPane className="content-container" tab="Search" key="search">
@@ -182,7 +182,7 @@ class App extends Component {
 
           <NotifyContainer />
         </Layout>
-      </TmdbApiServiceProvider>
+      </ServicesProvider>
     );
   }
 }

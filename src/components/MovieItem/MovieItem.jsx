@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 import './MovieItem.scss';
 
-import { TmdbApiServiceConsumer } from '../TmdbApiContext';
+import { ServicesConsumer } from '../ServicesContext';
 import AverageRate from '../AverageRate';
 
 export default function MoviesItem({
@@ -74,7 +74,7 @@ export default function MoviesItem({
           />
         </div>
 
-        <TmdbApiServiceConsumer>
+        <ServicesConsumer>
           {({ tmdbApiService, localStorageService }) => (
             <Rate
               className="item__stars"
@@ -90,7 +90,7 @@ export default function MoviesItem({
               count={10}
             />
           )}
-        </TmdbApiServiceConsumer>
+        </ServicesConsumer>
       </div>
     </li>
   );
