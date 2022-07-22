@@ -81,6 +81,21 @@
     }
   }
 
+  &__label {
+  padding: 2px 5px;
+  font-family: Inter, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 15px;
+  border: 1px solid #D9D9D9;
+  border-radius: 2px;
+  color: rgba(0, 0, 0, 0.65);
+  background-color: #FAFAFA;
+  cursor: default;
+}
+
+
   &__description {
     max-width: 230px;
     overflow: hidden;

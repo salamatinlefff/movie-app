@@ -2,15 +2,14 @@ import { Rate } from 'antd';
 import { format } from 'date-fns';
 import React, { createRef, useEffect, useState } from 'react';
 import TextTruncate from 'react-text-truncate';
+import PropTypes from 'prop-types';
 
 import './MovieItem.scss';
 
-import ItemLabel from '../ItemLabel';
 import { TmdbApiServiceConsumer } from '../TmdbApiContext';
-import { averageColor } from '../../utils';
-import { saveLocalRated } from '../../services';
+import AverageRate from '../AverageRate';
 
-export default function MoviesListItem({
+export default function MoviesItem({
   id,
   title,
   description,
@@ -46,9 +45,7 @@ export default function MoviesListItem({
       </div>
 
       <div className="item__about">
-        <span className="item__grade" style={{ borderColor: averageColor(average) }}>
-          {parseFloat(average).toFixed(1) || 'N/A'}
-        </span>
+        <AverageRate average={average} />
         <h2 className="item__title">{title || 'N/A'}</h2>
 
         <span className="item__release-time">
@@ -59,12 +56,12 @@ export default function MoviesListItem({
           {genres.length ? (
             genres.map((genre) => (
               <li className="labels-item" key={genre}>
-                <ItemLabel label={genre} />
+                <span className="item__label">{genre}</span>
               </li>
             ))
           ) : (
             <li className="labels-item" key="N/A">
-              <ItemLabel label="N/A" />
+              <span className="item__label">N/A</span>
             </li>
           )}
         </ul>
@@ -78,18 +75,18 @@ export default function MoviesListItem({
         </div>
 
         <TmdbApiServiceConsumer>
-          {({ rateMovie }) => (
+          {({ tmdbApiService, localStorageService }) => (
             <Rate
               className="item__stars"
               allowHalf
               onChange={(rate) => {
-                rateMovie(id, rate);
-                saveLocalRated({
+                tmdbApiService.rateMovie(id, rate);
+                localStorageService.saveLocalRated({
                   id,
                   rating: rate,
                 });
               }}
-              defaultValue={rating || 0}
+              defaultValue={rating}
               count={10}
             />
           )}
@@ -98,3 +95,18 @@ export default function MoviesListItem({
     </li>
   );
 }
+
+MoviesItem.defaultProps = {
+  rating: 0,
+};
+
+MoviesItem.propTypes = {
+  id: PropTypes.number.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  poster: PropTypes.string.isRequired,
+  release: PropTypes.string.isRequired,
+  average: PropTypes.number.isRequired,
+  genres: PropTypes.arrayOf(PropTypes.string).isRequired,
+  rating: PropTypes.number,
+};

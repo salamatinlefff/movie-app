@@ -1,5 +1,4 @@
 import { TmdbApiService } from './TmdbApiService';
-import { saveLocalRated, loadLocalRated } from './LocalStorageService';
+import { LocalStorageService } from './LocalStorageService';
 
-export default TmdbApiService;
-export { saveLocalRated, loadLocalRated };
+export { LocalStorageService, TmdbApiService };

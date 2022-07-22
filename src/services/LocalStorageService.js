@@ -1,14 +1,27 @@
-const saveLocalRated = (obj) => {
-  const storage = localStorage.getItem('rated-movies')
-    ? JSON.parse(localStorage.getItem('rated-movies'))
-    : [];
+class LocalStorageService {
+  loadLocalRated = () =>
+    localStorage.getItem('rated-movies') ? JSON.parse(localStorage.getItem('rated-movies')) : [];
 
-  const newStorage = JSON.stringify([...storage, obj]);
+  saveLocalRated = (obj) => {
+    const storage = localStorage.getItem('rated-movies')
+      ? JSON.parse(localStorage.getItem('rated-movies'))
+      : [];
+    let newStorage;
 
-  localStorage.setItem('rated-movies', newStorage);
-};
+    const hasItem = storage.find((item) => item.id === obj.id);
 
-const loadLocalRated = () =>
-  localStorage.getItem('rated-movies') ? JSON.parse(localStorage.getItem('rated-movies')) : [];
+    if (hasItem) {
+      newStorage = [...storage].map((item) => {
+        if (item.id === obj.id) return obj;
 
-export { saveLocalRated, loadLocalRated };
+        return item;
+      });
+    } else {
+      newStorage = [...storage, obj];
+    }
+
+    return localStorage.setItem('rated-movies', JSON.stringify(newStorage));
+  };
+}
+
+export { LocalStorageService };

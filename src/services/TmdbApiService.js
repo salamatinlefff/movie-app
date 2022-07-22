@@ -64,7 +64,7 @@ class TmdbApiService {
   rateMovie = async (id, rate) => {
     if (!this.apiKeyGuest) await this.saveGuestSession();
 
-    fetch(
+    const response = await fetch(
       `${this.BASE_URL}/movie/${id}/rating?api_key=${this.API_KEY}&guest_session_id=${this.apiKeyGuest}`,
       {
         method: 'POST',
@@ -76,6 +76,8 @@ class TmdbApiService {
         }),
       },
     );
+
+    if (!response.ok) throw new Error(`Что-то пошло не так, ошибка: ${response.status}`);
   };
 
   createGuestSession = () => fetch(`${this.BASE_URL_AUTH_GUEST}/new?api_key=${this.API_KEY}`);

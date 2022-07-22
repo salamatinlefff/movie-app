@@ -1,5 +1,6 @@
 import { Empty } from 'antd';
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const emptyLogo = (
   <svg width="130" height="80" xmlns="http://www.w3.org/2000/svg">
@@ -62,8 +63,7 @@ const emptyLogo = (
   </svg>
 );
 
-export default function EmptyMessage({ label }) {
-  const defaultLabel = 'Oops! We did not find anything =(';
+export default function EmptyView({ label }) {
   return (
     <div
       style={{ height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -73,8 +73,16 @@ export default function EmptyMessage({ label }) {
         imageStyle={{
           height: 120,
         }}
-        description={<span style={{ fontSize: '20px' }}>{label || defaultLabel}</span>}
+        description={<span style={{ fontSize: '20px' }}>{label}</span>}
       />
     </div>
   );
 }
+
+EmptyView.defaultProps = {
+  label: 'Oops! We did not find anything =(',
+};
+
+EmptyView.propTypes = {
+  label: PropTypes.string,
+};

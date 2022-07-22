@@ -1,15 +1,38 @@
 import { Pagination } from 'antd';
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import Spinner from '../Spinner';
-import EmptyIndicator from '../EmptyIndicator';
+import EmptyView from '../EmptyView';
 import MovieList from '../MovieList';
 
 import './RatedPage.scss';
 
 export default class RatedPage extends Component {
+  static defaultProps = {
+    ratedPage: {
+      page: 1,
+    },
+  };
+
+  static propTypes = {
+    onChangeRatedPage: PropTypes.func.isRequired,
+    getRatedMovies: PropTypes.func.isRequired,
+    ratedPage: PropTypes.shape({}),
+  };
+
+  componentDidMount() {
+    const { onChangeRatedPage, getRatedMovies, ratedPage } = this.props;
+    const { page } = ratedPage;
+
+    getRatedMovies({ page });
+    onChangeRatedPage({ page });
+  }
+
   onChangePagination = (page) => {
-    const { getRatedMovies } = this.props;
+    const { getRatedMovies, onChangeRatedPage } = this.props;
+
+    onChangeRatedPage({ page });
 
     getRatedMovies({ page });
   };
@@ -22,12 +45,11 @@ export default class RatedPage extends Component {
     const { movies, total, page, isLoading, isEmpty } = ratedPage;
 
     const hasData = movies && !(isLoading || isEmpty);
-    const emptyTrigger = isEmpty;
 
     return (
       <>
         {isLoading && <Spinner />}
-        {emptyTrigger && <EmptyIndicator />}
+        {isEmpty && <EmptyView />}
 
         {hasData && <MovieList movies={movies} />}
         {hasData && (

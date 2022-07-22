@@ -1,9 +1,14 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import { notifyMessage } from '../../utils';
-import EmptyIndicator from '../EmptyIndicator';
+import EmptyView from '../EmptyView';
 
 export default class ErrorBoundary extends Component {
+  static propTypes = {
+    children: PropTypes.node.isRequired,
+  };
+
   state = {};
 
   componentDidMount() {
@@ -26,6 +31,6 @@ export default class ErrorBoundary extends Component {
 
     notifyMessage('error', errorMessage);
 
-    return <EmptyIndicator label={errorMessage} />;
+    return <EmptyView label={errorMessage} />;
   }
 }

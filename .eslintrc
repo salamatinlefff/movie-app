@@ -50,7 +50,8 @@
     "class-methods-use-this": "off",
     "consistent-return": "off",
     "no-param-reassign": "off",
-    "react/destructuring-assignment": "off"
+    "react/destructuring-assignment": "off",
+    "react/static-property-placement": "off"
   },
   "settings": {
     "import/resolver": {

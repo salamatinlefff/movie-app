@@ -1,24 +1,35 @@
 import React, { Component, createRef } from 'react';
 import { Input, Pagination } from 'antd';
 import { debounce } from 'lodash';
+import PropTypes from 'prop-types';
 
 import './SearchPage.scss';
 
 import MovieList from '../MovieList';
 import Spinner from '../Spinner';
-import EmptyIndicator from '../EmptyIndicator';
+import EmptyView from '../EmptyView';
 
 export default class SearchPage extends Component {
+  static defaultProps = {
+    searchPage: {
+      query: 'return',
+      page: 1,
+    },
+  };
+
+  static propTypes = {
+    onChangeSearchPage: PropTypes.func.isRequired,
+    getSearchMovies: PropTypes.func.isRequired,
+    searchPage: PropTypes.shape({}),
+  };
+
   searchInputRef = createRef();
 
   debounceGetSearchMovies = debounce(this.props.getSearchMovies, 400);
 
   componentDidMount() {
-    const { onChangeSearchPage, getSearchMovies } = this.props;
-
-    const query = 'return';
-    const page = 1;
-
+    const { onChangeSearchPage, getSearchMovies, searchPage } = this.props;
+    const { query, page } = searchPage;
     getSearchMovies({ query, page });
     onChangeSearchPage({ query, page });
   }
@@ -38,7 +49,7 @@ export default class SearchPage extends Component {
 
   onChangeSearchInput = ({ target: { value } }) => {
     const {
-      searchPage: { query, page },
+      searchPage: { query },
     } = this.props;
 
     const { onChangeSearchPage } = this.props;
@@ -50,7 +61,7 @@ export default class SearchPage extends Component {
     if (query.trim() === '' && value.trim() === '') return onChangeSearchPage({ isEmpty: true });
     if (query.trim() === value.trim()) return null;
 
-    this.debounceGetSearchMovies({ query: value, page });
+    this.debounceGetSearchMovies({ query: value, page: 1 });
   };
 
   render() {
@@ -73,7 +84,7 @@ export default class SearchPage extends Component {
         />
 
         {isLoading && <Spinner />}
-        {isEmpty && <EmptyIndicator />}
+        {isEmpty && <EmptyView />}
 
         {hasData && <MovieList movies={movies} />}
         {hasData && (

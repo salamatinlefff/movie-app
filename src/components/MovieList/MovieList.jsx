@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import MovieItem from '../MovieItem';
 
@@ -36,3 +37,7 @@ export default function MoviesList({ movies }) {
     </ul>
   );
 }
+
+MoviesList.propTypes = {
+  movies: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};

@@ -4,13 +4,12 @@ import './App.scss';
 import React, { Component } from 'react';
 import { Layout, Tabs } from 'antd';
 
-import { TmdbApiService } from '../../services/TmdbApiService';
 import { TmdbApiServiceProvider } from '../TmdbApiContext';
 import { NotifyContainer } from '../hoc-helper';
 import { notifyMessage } from '../../utils';
-import { loadLocalRated } from '../../services';
+import { TmdbApiService, LocalStorageService } from '../../services';
 import ErrorBoundary from '../ErrorBoundary';
-import EmptyIndicator from '../EmptyIndicator';
+import EmptyView from '../EmptyView';
 import RatedPage from '../RatedPage';
 import SearchPage from '../SearchPage';
 
@@ -19,7 +18,10 @@ const { TabPane } = Tabs;
 class App extends Component {
   state = {};
 
-  tmdbApiService = new TmdbApiService();
+  services = {
+    tmdbApiService: new TmdbApiService(),
+    localStorageService: new LocalStorageService(),
+  };
 
   componentDidMount() {
     this.setState({
@@ -46,24 +48,25 @@ class App extends Component {
     });
   }
 
-  onChangeSearchPage = (searchPage) => {
-    this.setState((prevState) => ({ searchPage: { ...prevState.searchPage, ...searchPage } }));
+  onChangeSearchPage = (newSearchPage) => {
+    this.setState((prevState) => ({ searchPage: { ...prevState.searchPage, ...newSearchPage } }));
   };
 
-  onChangeRatedPage = (ratedPage) => {
-    this.setState((prevState) => ({ ratedPage: { ...prevState.ratedPage, ...ratedPage } }));
+  onChangeRatedPage = (newRatedPage) => {
+    this.setState((prevState) => ({ ratedPage: { ...prevState.ratedPage, ...newRatedPage } }));
   };
 
   onChangeTab = (tab) => {
     const {
       searchPage: { query, page },
+      ratedPage: { page: numRatedPage } = { page: 1 },
     } = this.state;
 
     switch (tab) {
       case 'search':
         return this.getSearchMovies({ query, page });
       case 'rated':
-        return this.getRatedMovies({ page: 1 });
+        return this.getRatedMovies({ page: numRatedPage });
       default:
         return null;
     }
@@ -77,7 +80,7 @@ class App extends Component {
     this.setState({ hasError: false });
 
     try {
-      const res = await this.tmdbApiService.search({
+      const res = await this.services.tmdbApiService.search({
         query: encodeURIComponent(query).trim(),
         page,
       });
@@ -98,12 +101,13 @@ class App extends Component {
   getRatedMovies = async ({ page }) => {
     this.onChangeRatedPage({
       isLoading: true,
+      page,
     });
 
     this.setState({ hasError: false });
 
     try {
-      const res = await this.tmdbApiService.getRatedMovie({ page });
+      const res = await this.services.tmdbApiService.getRatedMovie({ page });
 
       this.onChangeRatedPage({
         page: res.page,
@@ -119,7 +123,7 @@ class App extends Component {
   };
 
   filteredMovie = (searchMovies) => {
-    const ratedMovies = loadLocalRated();
+    const ratedMovies = this.services.localStorageService.loadLocalRated();
 
     return [...searchMovies].reduce((res, movie) => {
       ratedMovies.forEach((rated) => {
@@ -138,15 +142,16 @@ class App extends Component {
     const { isOffline, hasError, searchPage, ratedPage } = this.state;
 
     const textError = 'Connection to server failed... Please try again';
+    const textOffline = 'Please reconnect your internet';
 
-    const hasData = !isOffline && !hasError;
+    const hasErrors = isOffline && hasError;
 
     return (
-      <TmdbApiServiceProvider value={this.tmdbApiService}>
+      <TmdbApiServiceProvider value={this.services}>
         <Layout className="main">
           <Tabs onTabClick={this.onChangeTab} defaultActiveKey="search" centered size="large">
             <TabPane className="content-container" tab="Search" key="search">
-              {hasData && (
+              {!hasErrors && (
                 <ErrorBoundary>
                   <SearchPage
                     onChangeSearchPage={this.onChangeSearchPage}
@@ -158,17 +163,22 @@ class App extends Component {
             </TabPane>
 
             <TabPane className="content-container" tab="Rated" key="rated">
-              {hasData && (
+              {!hasErrors && (
                 <ErrorBoundary>
-                  <RatedPage getRatedMovies={this.getRatedMovies} ratedPage={ratedPage} />
+                  <RatedPage
+                    onChangeRatedPage={this.onChangeRatedPage}
+                    getRatedMovies={this.getRatedMovies}
+                    ratedPage={ratedPage}
+                  />
                 </ErrorBoundary>
               )}
             </TabPane>
           </Tabs>
 
-          {hasError && <EmptyIndicator label={textError} />}
+          {hasError && <EmptyView label={textError} />}
           {hasError && notifyMessage('error', textError)}
-          {isOffline && <EmptyIndicator label="Please reconnect your internet" />}
+
+          {isOffline && <EmptyView label={textOffline} />}
 
           <NotifyContainer />
         </Layout>
