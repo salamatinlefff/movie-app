@@ -29,24 +29,33 @@ class App extends Component {
       hasError: false,
     });
 
-    window.addEventListener('offline', () => {
-      notifyMessage('error', 'Connection lost!');
+    window.addEventListener('offline', this.callbackOffline);
 
-      this.setState({
-        isOffline: true,
-        hasError: false,
-      });
-    });
-
-    window.addEventListener('online', () => {
-      notifyMessage('success', 'Connection restored!');
-
-      this.setState({
-        isOffline: false,
-        hasError: false,
-      });
-    });
+    window.addEventListener('online', this.callbackOnline);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener('offline', this.callbackOffline);
+    window.removeEventListener('online', this.callbackOnline);
+  }
+
+  callbackOffline = () => {
+    notifyMessage('error', 'Connection lost!');
+
+    this.setState({
+      isOffline: true,
+      hasError: false,
+    });
+  };
+
+  callbackOnline = () => {
+    notifyMessage('success', 'Connection restored!');
+
+    this.setState({
+      isOffline: false,
+      hasError: false,
+    });
+  };
 
   onChangeSearchPage = (newSearchPage) => {
     this.setState((prevState) => ({ searchPage: { ...prevState.searchPage, ...newSearchPage } }));
