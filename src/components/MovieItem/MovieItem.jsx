@@ -27,7 +27,7 @@ export default function MoviesItem({
     const height = descriptionRef.current.clientHeight;
 
     setDescrHeight(height);
-  }, []);
+  }, [descriptionRef]);
 
   return (
     <li className="cards__item item">
