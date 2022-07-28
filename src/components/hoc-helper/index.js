@@ -1,3 +1,1 @@
-import { NotifyContainer } from './NotifyContainer';
-
-export { NotifyContainer };
+export { NotifyContainer } from './NotifyContainer';

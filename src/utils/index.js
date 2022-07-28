@@ -1,3 +1,1 @@
-import { notifyMessage } from './utils';
-
-export { notifyMessage };
+export { notifyMessage } from './utils';

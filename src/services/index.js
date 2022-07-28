@@ -1,4 +1,2 @@
-import { TmdbApiService } from './TmdbApiService';
-import { LocalStorageService } from './LocalStorageService';
-
-export { LocalStorageService, TmdbApiService };
+export { TmdbApiService } from './TmdbApiService';
+export { LocalStorageService } from './LocalStorageService';

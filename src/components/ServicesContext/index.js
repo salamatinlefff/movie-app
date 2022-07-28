@@ -1,3 +1,1 @@
-import { ServicesProvider, ServicesConsumer } from './ServicesContext';
-
-export { ServicesProvider, ServicesConsumer };
+export { ServicesProvider, ServicesConsumer } from './ServicesContext';
