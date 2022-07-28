@@ -1,4 +1,4 @@
-import React, { Component, createRef } from 'react';
+import React, { createRef, PureComponent } from 'react';
 import { Input, Pagination } from 'antd';
 import { debounce } from 'lodash';
 import PropTypes from 'prop-types';
@@ -9,7 +9,7 @@ import MovieList from '../MovieList';
 import Spinner from '../Spinner';
 import EmptyView from '../EmptyView';
 
-export default class SearchPage extends Component {
+export default class SearchPage extends PureComponent {
   static propTypes = {
     needUpdateSearch: PropTypes.bool.isRequired,
   };

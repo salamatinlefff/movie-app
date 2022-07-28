@@ -1,14 +1,14 @@
 import './RatedPage.scss';
 
 import { Pagination } from 'antd';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 import Spinner from '../Spinner';
 import EmptyView from '../EmptyView';
 import MovieList from '../MovieList';
 
-export default class RatedPage extends Component {
+export default class RatedPage extends PureComponent {
   static propTypes = {
     needUpdateRated: PropTypes.bool.isRequired,
   };
