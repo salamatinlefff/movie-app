@@ -11,36 +11,20 @@ class TmdbApiService {
 
   SORT_BY = 'sort_by=created_at.asc';
 
-  GENRES = {
-    28: 'Action',
-    12: 'Adventure',
-    16: 'Animation',
-    35: 'Comedy',
-    80: 'Crime',
-    99: 'Documentary',
-    18: 'Drama',
-    10751: 'Family',
-    14: 'Fantasy',
-    36: 'History',
-    27: 'Horror',
-    10402: 'Music',
-    9648: 'Mystery',
-    10749: 'Romance',
-    878: 'Science Fiction',
-    10770: 'TV Movie',
-    53: 'Thriller',
-    10752: 'War',
-    37: 'Western',
-  };
-
   getData = async (url) => {
-    if (!this.apiKeyGuest) await this.saveGuestSession();
+    let data;
+    try {
+      if (!this.apiKeyGuest) await this.saveGuestSession();
+      if (!this.genres) this.genres = await this.getGenres();
 
-    const response = await fetch(url);
+      const response = await fetch(url);
 
-    if (!response.ok) throw new Error(`Что-то пошло не так, ошибка: ${response.status}`);
+      if (!response.ok) throw new Error(`Something wrong, error: ${response.status}`);
 
-    const data = await response.json();
+      data = await response.json();
+    } catch (err) {
+      throw new Error(`Something wrong, error: ${err}`);
+    }
 
     data.results = this.transformData(data.results);
 
@@ -77,7 +61,7 @@ class TmdbApiService {
       },
     );
 
-    if (!response.ok) throw new Error(`Что-то пошло не так, ошибка: ${response.status}`);
+    if (!response.ok) throw new Error(`Something wrong, error: ${response.status}`);
   };
 
   createGuestSession = () => fetch(`${this.BASE_URL_AUTH_GUEST}/new?api_key=${this.API_KEY}`);
@@ -101,7 +85,33 @@ class TmdbApiService {
     return this.apiKeyGuest;
   };
 
-  transformGenres = (arr) => arr.map((genre) => this.GENRES[genre]);
+  getGenres = async () => {
+    try {
+      const res = await fetch(
+        'https://api.themoviedb.org/3/genre/movie/list?api_key=bd90935d822d9cdd29ec2d8891aaa89a&language=en-US',
+      );
+
+      if (!res.ok) throw new Error(`Something wrong, error: ${res.status}`);
+
+      const data = await res.json();
+
+      return data.genres;
+    } catch (err) {
+      throw new Error(`Something wrong, error: ${err}`);
+    }
+  };
+
+  transformGenres = (arr) =>
+    arr.map((item) => {
+      let newItem;
+      this.genres.forEach((genre) => {
+        if (genre.id === item) {
+          newItem = genre.name;
+        }
+      });
+
+      return newItem;
+    });
 
   transformData = (items) =>
     [...items].map((item) => ({
