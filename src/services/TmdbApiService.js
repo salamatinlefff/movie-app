@@ -84,12 +84,16 @@ class TmdbApiService {
 
   saveGuestSession = async () => {
     if (!localStorage.getItem('guestSession')) {
+      let guestData;
       const response = await this.createGuestSession();
-      const guestData = await response.json();
 
-      if (guestData.success) {
-        localStorage.clear();
-        localStorage.setItem('guestSession', guestData.guest_session_id);
+      if (response.ok) {
+        guestData = await response.json();
+
+        if (guestData.success) {
+          localStorage.setItem('rated-movies', []);
+          localStorage.setItem('guestSession', guestData.guest_session_id);
+        }
       }
     }
     this.apiKeyGuest = localStorage.getItem('guestSession');
