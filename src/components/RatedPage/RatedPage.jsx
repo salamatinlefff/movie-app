@@ -25,8 +25,10 @@ export default class RatedPage extends Component {
     const { onChangeRatedPage, getRatedMovies, ratedPage } = this.props;
     const { page } = ratedPage;
 
-    getRatedMovies({ page });
-    onChangeRatedPage({ page });
+    if (!ratedPage) {
+      getRatedMovies({ page });
+      onChangeRatedPage({ page });
+    }
   }
 
   onChangePagination = (page) => {
