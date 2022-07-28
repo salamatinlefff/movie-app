@@ -10,68 +10,125 @@ import Spinner from '../Spinner';
 import EmptyView from '../EmptyView';
 
 export default class SearchPage extends Component {
-  static defaultProps = {
-    searchPage: {
-      query: 'return',
-      page: 1,
-    },
-  };
-
   static propTypes = {
-    onChangeSearchPage: PropTypes.func.isRequired,
-    getSearchMovies: PropTypes.func.isRequired,
-    searchPage: PropTypes.shape({}),
+    needUpdateSearch: PropTypes.bool.isRequired,
   };
 
-  searchInputRef = createRef();
-
-  debounceGetSearchMovies = debounce(this.props.getSearchMovies, 400);
+  state = {};
 
   componentDidMount() {
-    const { onChangeSearchPage, getSearchMovies, searchPage } = this.props;
-    const { query, page } = searchPage;
-    getSearchMovies({ query, page });
-    onChangeSearchPage({ query, page });
+    this.searchInputRef = createRef();
+    this.debounceGetSearchMovies = debounce(this.getSearchMovies, 400);
+
+    const { onCancelUpdatePages } = this.props;
+    const page = 1;
+    const query = 'return';
+
+    this.setState({
+      page,
+      query,
+      isLoading: false,
+      hasError: false,
+      canUpdate: false,
+    });
+
+    this.getSearchMovies({ query, page });
+
+    this.setState({ canUpdate: true });
+
+    onCancelUpdatePages();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
+    const { needUpdateSearch, onCancelUpdatePages } = this.props;
+    const { page, query } = this.state;
+    const { isLoading, canUpdate } = prevState;
+
     if (this.searchInputRef) this.searchInputRef.current.focus();
+
+    if (needUpdateSearch && !isLoading && canUpdate) {
+      this.getSearchMovies({ query, page });
+
+      onCancelUpdatePages();
+    }
   }
+
+  getSearchMovies = async ({ query, page }) => {
+    const { services } = this.props;
+
+    this.setState({
+      isLoading: true,
+      hasError: false,
+    });
+
+    try {
+      const res = await services.tmdbApiService.search({
+        query: encodeURIComponent(query).trim(),
+        page,
+      });
+
+      this.setState({
+        page,
+        movies: this.filteredMovie(res.results),
+        total: res.total_results,
+        isEmpty: !res.results.length,
+      });
+    } catch (err) {
+      this.setState({
+        hasError: true,
+        page: 1,
+        movies: null,
+        total: null,
+        isEmpty: false,
+      });
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  };
+
+  filteredMovie = (searchMovies) => {
+    const { services } = this.props;
+
+    const ratedMovies = services.localStorageService.loadLocalRated();
+
+    return [...searchMovies].reduce((res, movie) => {
+      ratedMovies.forEach((rated) => {
+        if (rated.id === movie.id) {
+          movie.rating = rated.rating;
+        }
+      });
+
+      res.push(movie);
+
+      return res;
+    }, []);
+  };
 
   onChangePagination = (page) => {
-    const {
-      searchPage: { query },
-      getSearchMovies,
-    } = this.props;
+    const { query } = this.state;
 
-    getSearchMovies({ query, page });
+    this.getSearchMovies({ query, page });
   };
 
   onChangeSearchInput = ({ target: { value } }) => {
-    const {
-      searchPage: { query },
-    } = this.props;
+    const { query } = this.state;
 
-    const { onChangeSearchPage } = this.props;
-
-    onChangeSearchPage({
+    this.setState({
       query: value,
     });
 
-    if (query.trim() === '' && value.trim() === '') return onChangeSearchPage({ isEmpty: true });
+    if (query.trim() === '' && value.trim() === '') return this.setState({ isEmpty: true });
     if (query.trim() === value.trim()) return null;
 
     this.debounceGetSearchMovies({ query: value, page: 1 });
   };
 
   render() {
-    const { searchPage } = this.props;
-
-    if (!searchPage) return <Spinner />;
-
-    const { movies, query, total, page, isLoading, isEmpty } = searchPage;
+    const { movies, query, total, page, isLoading, isEmpty, hasError } = this.state;
 
     const hasData = movies && !(isLoading || isEmpty);
+
+    const textError = 'Connection to server failed... Please try again later';
 
     return (
       <>
@@ -98,6 +155,8 @@ export default class SearchPage extends Component {
             current={page}
           />
         )}
+
+        {hasError && <EmptyView label={textError} />}
       </>
     );
   }

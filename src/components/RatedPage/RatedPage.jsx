@@ -1,3 +1,5 @@
+import './RatedPage.scss';
+
 import { Pagination } from 'antd';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -6,47 +8,80 @@ import Spinner from '../Spinner';
 import EmptyView from '../EmptyView';
 import MovieList from '../MovieList';
 
-import './RatedPage.scss';
-
 export default class RatedPage extends Component {
-  static defaultProps = {
-    ratedPage: {
-      page: 1,
-    },
+  static propTypes = {
+    needUpdateRated: PropTypes.bool.isRequired,
   };
 
-  static propTypes = {
-    onChangeRatedPage: PropTypes.func.isRequired,
-    getRatedMovies: PropTypes.func.isRequired,
-    ratedPage: PropTypes.shape({}),
-  };
+  state = {};
 
   componentDidMount() {
-    const { onChangeRatedPage, getRatedMovies, ratedPage } = this.props;
-    const { page } = ratedPage;
+    const { onCancelUpdatePages } = this.props;
+    const page = 1;
 
-    if (!ratedPage) {
-      getRatedMovies({ page });
-      onChangeRatedPage({ page });
+    this.setState({
+      page,
+      isLoading: false,
+      hasError: false,
+      canUpdate: false,
+    });
+
+    this.getRatedMovies({ page });
+
+    this.setState({ canUpdate: true });
+
+    onCancelUpdatePages();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { needUpdateRated, onCancelUpdatePages } = this.props;
+    const { page } = this.state;
+    const { isLoading, canUpdate } = prevState;
+
+    if (needUpdateRated && !isLoading && canUpdate) {
+      this.getRatedMovies({ page });
+
+      onCancelUpdatePages();
     }
   }
 
+  getRatedMovies = async ({ page }) => {
+    const { services } = this.props;
+
+    this.setState({
+      page,
+      isLoading: true,
+      hasError: false,
+    });
+
+    try {
+      const res = await services.tmdbApiService.getRatedMovie({ page });
+
+      this.setState({
+        page: res.page,
+        movies: res.results,
+        total: res.total_results,
+        isEmpty: !res.results.length,
+      });
+    } catch {
+      this.setState({ hasError: true, page: 1, movies: null, total: null, isEmpty: false });
+    } finally {
+      this.setState({ isLoading: false });
+    }
+  };
+
   onChangePagination = (page) => {
-    const { getRatedMovies, onChangeRatedPage } = this.props;
+    this.setState({ page });
 
-    onChangeRatedPage({ page });
-
-    getRatedMovies({ page });
+    this.getRatedMovies({ page });
   };
 
   render() {
-    const { ratedPage } = this.props;
-
-    if (!ratedPage) return null;
-
-    const { movies, total, page, isLoading, isEmpty } = ratedPage;
+    const { isLoading, hasError, page, movies, total, isEmpty } = this.state;
 
     const hasData = movies && !(isLoading || isEmpty);
+
+    const textError = 'Connection to server failed... Please try again later';
 
     return (
       <>
@@ -65,6 +100,8 @@ export default class RatedPage extends Component {
             current={page}
           />
         )}
+
+        {hasError && <EmptyView label={textError} />}
       </>
     );
   }

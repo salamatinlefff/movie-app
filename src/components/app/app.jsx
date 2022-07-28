@@ -16,7 +16,7 @@ import SearchPage from '../SearchPage';
 const { TabPane } = Tabs;
 
 class App extends Component {
-  state = {};
+  state = { needUpdateSearch: false, needUpdateRated: false };
 
   services = {
     tmdbApiService: new TmdbApiService(),
@@ -26,11 +26,9 @@ class App extends Component {
   componentDidMount() {
     this.setState({
       isOffline: false,
-      hasError: false,
     });
 
     window.addEventListener('offline', this.callbackOffline);
-
     window.addEventListener('online', this.callbackOnline);
   }
 
@@ -44,7 +42,6 @@ class App extends Component {
 
     this.setState({
       isOffline: true,
-      hasError: false,
     });
   };
 
@@ -53,139 +50,56 @@ class App extends Component {
 
     this.setState({
       isOffline: false,
-      hasError: false,
     });
   };
 
-  onChangeSearchPage = (newSearchPage) => {
-    this.setState((prevState) => ({ searchPage: { ...prevState.searchPage, ...newSearchPage } }));
-  };
-
-  onChangeRatedPage = (newRatedPage) => {
-    this.setState((prevState) => ({ ratedPage: { ...prevState.ratedPage, ...newRatedPage } }));
-  };
-
   onChangeTab = (tab) => {
-    const {
-      searchPage: { query, page },
-      ratedPage: { page: numRatedPage } = { page: 1 },
-    } = this.state;
-
+    this.setState({});
     switch (tab) {
       case 'search':
-        return this.getSearchMovies({ query, page });
+        return this.setState({ needUpdateSearch: true });
       case 'rated':
-        return this.getRatedMovies({ page: numRatedPage });
+        return this.setState({ needUpdateRated: true });
       default:
         return null;
     }
   };
 
-  getSearchMovies = async ({ query, page }) => {
-    this.onChangeSearchPage({
-      isLoading: true,
-    });
-
-    this.setState({ hasError: false });
-
-    try {
-      const res = await this.services.tmdbApiService.search({
-        query: encodeURIComponent(query).trim(),
-        page,
-      });
-
-      this.onChangeSearchPage({
-        page,
-        movies: this.filteredMovie(res.results),
-        total: res.total_results,
-        isEmpty: !res.results.length,
-      });
-    } catch {
-      this.setState({ hasError: true });
-    } finally {
-      this.onChangeSearchPage({ isLoading: false });
-    }
-  };
-
-  getRatedMovies = async ({ page }) => {
-    this.onChangeRatedPage({
-      isLoading: true,
-      page,
-    });
-
-    this.setState({ hasError: false });
-
-    try {
-      const res = await this.services.tmdbApiService.getRatedMovie({ page });
-
-      this.onChangeRatedPage({
-        page: res.page,
-        movies: res.results,
-        total: res.total_results,
-        isEmpty: !res.results.length,
-      });
-    } catch {
-      this.setState({ hasError: true });
-    } finally {
-      this.onChangeRatedPage({ isLoading: false });
-    }
-  };
-
-  filteredMovie = (searchMovies) => {
-    const ratedMovies = this.services.localStorageService.loadLocalRated();
-
-    return [...searchMovies].reduce((res, movie) => {
-      ratedMovies.forEach((rated) => {
-        if (rated.id === movie.id) {
-          movie.rating = rated.rating;
-        }
-      });
-
-      res.push(movie);
-
-      return res;
-    }, []);
-  };
+  onCancelUpdatePages = () => this.setState({ needUpdateSearch: false, needUpdateRated: false });
 
   render() {
-    const { isOffline, hasError, searchPage, ratedPage } = this.state;
+    const { isOffline } = this.state;
 
-    const textError = 'Connection to server failed... Please try again';
     const textOffline = 'Please reconnect your internet';
-
-    const hasErrors = isOffline && hasError;
 
     return (
       <ServicesProvider value={this.services}>
         <Layout className="main">
           <Tabs onTabClick={this.onChangeTab} defaultActiveKey="search" centered size="large">
-            <TabPane className="content-container" tab="Search" key="search">
-              {!hasErrors && (
+            <TabPane forceRender className="content-container" tab="Search" key="search">
+              {!isOffline && (
                 <ErrorBoundary>
                   <SearchPage
-                    onChangeSearchPage={this.onChangeSearchPage}
-                    getSearchMovies={this.getSearchMovies}
-                    searchPage={searchPage}
+                    onCancelUpdatePages={this.onCancelUpdatePages}
+                    needUpdateSearch={this.state.needUpdateSearch}
+                    services={this.services}
                   />
                 </ErrorBoundary>
               )}
             </TabPane>
 
             <TabPane className="content-container" tab="Rated" key="rated">
-              {!hasErrors && (
+              {!isOffline && (
                 <ErrorBoundary>
                   <RatedPage
-                    onChangeRatedPage={this.onChangeRatedPage}
-                    getRatedMovies={this.getRatedMovies}
-                    ratedPage={ratedPage}
+                    onCancelUpdatePages={this.onCancelUpdatePages}
+                    needUpdateRated={this.state.needUpdateRated}
+                    services={this.services}
                   />
                 </ErrorBoundary>
               )}
             </TabPane>
           </Tabs>
-
-          {hasError && <EmptyView label={textError} />}
-          {hasError && notifyMessage('error', textError)}
 
           {isOffline && <EmptyView label={textOffline} />}
 
